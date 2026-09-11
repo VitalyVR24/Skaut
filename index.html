@@ -348,7 +348,7 @@ input:focus, select:focus { outline: none; border-color: var(--brand); box-shado
             <div class="store-card" id="storeCard" hidden>
               <img class="store-icon" id="scIcon" alt="" />
               <div class="store-meta">
-                <div class="sc-name" id="scName">—</div>
+                <input class="sc-name" id="scName" placeholder="название игры" />
                 <div class="sc-grid">
                   <label>Разработчик<input id="scDev" /></label>
                   <label>E-mail разработчика<input id="scEmail" placeholder="вписать вручную" /></label>
@@ -713,7 +713,9 @@ window.NEW_BADGE_MS = 3 * 60 * 60 * 1000; // 3 часа
     if (!m) throw new Error("В ссылке Google Play не найден package id.");
     const pkg = m[1];
 
-    const html = await fetchViaProxy(url);
+    let html = "";
+    try { html = await fetchViaProxy(url); }
+    catch (e) { return manualAndroid(url, pkg); }   // прокси недоступны → ручной режим
     const pick = (re) => { const x = html.match(re); return x ? decode(x[1]).trim() : ""; };
 
     const rawTitle = pick(/<meta property="og:title" content="([^"]+)"/i)
@@ -731,21 +733,29 @@ window.NEW_BADGE_MS = 3 * 60 * 60 * 1000; // 3 часа
     const emailMatch = html.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
     if (emailMatch) developerEmail = emailMatch[0];
 
-    if (!name && !icon) {
-      throw new Error("Не удалось прочитать страницу Google Play (прокси/лимит). Заполните поля вручную.");
-    }
+    if (!name && !icon) return manualAndroid(url, pkg);
 
     return {
       platform: "android",
       storeUrl: url,
-      name: name || pkg,
+      name: name || "",
       developer,
       developerEmail,
       icon,
       releaseDate: "",   // на странице стабильно не отдаётся
       lastUpdate: "",
-      genreAuto: pick(/<meta name="appstore:bundle_id"[^>]*>/i) ? "" : "",
+      genreAuto: "",
       _partial: true
+    };
+  }
+
+  // Ручной режим для Google Play: карточка откроется пустой, поля впишутся руками.
+  function manualAndroid(url, pkg) {
+    return {
+      platform: "android", storeUrl: url,
+      name: "", developer: "", developerEmail: "", icon: "",
+      releaseDate: "", lastUpdate: "", genreAuto: "",
+      _manual: true, _pkg: pkg
     };
   }
 
@@ -755,15 +765,18 @@ window.NEW_BADGE_MS = 3 * 60 * 60 * 1000; // 3 часа
   async function fetchViaProxy(target) {
     const proxies = [
       (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+      (u) => `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(u)}`,
+      (u) => `https://thingproxy.freeboard.io/fetch/${u}`,
       (u) => `https://corsproxy.io/?url=${encodeURIComponent(u)}`
     ];
     let lastErr;
     for (const build of proxies) {
       try {
         const r = await fetch(build(target), { headers: { "Accept": "text/html" } });
-        if (!r.ok) throw new Error("HTTP " + r.status);
+        if (!r.ok) { lastErr = new Error("HTTP " + r.status); continue; }
         const t = await r.text();
         if (t && t.length > 500) return t;
+        lastErr = new Error("пустой ответ прокси");
       } catch (e) { lastErr = e; }
     }
     throw lastErr || new Error("Прокси недоступны.");
@@ -995,7 +1008,7 @@ window.NEW_BADGE_MS = 3 * 60 * 60 * 1000; // 3 часа
     $("#resetBtn").addEventListener("click", resetForm);
     ["#mGenre", "#mRpd", "#mRev", "#mInstalls", "#mOrganic"].forEach(sel =>
       $(sel).addEventListener("input", liveScore));
-    ["#scDev", "#scEmail", "#scRelease", "#scUpdate"].forEach(sel =>
+    ["#scName", "#scDev", "#scEmail", "#scRelease", "#scUpdate"].forEach(sel =>
       $(sel).addEventListener("input", syncStoreMeta));
   }
 
@@ -1012,7 +1025,8 @@ window.NEW_BADGE_MS = 3 * 60 * 60 * 1000; // 3 часа
       const guess = matchGenre(data.genreAuto);
       if (guess) { $("#mGenre").value = guess; }
       liveScore();
-      if (data._partial) { msg.className = "fetch-msg ok"; msg.textContent = "Google Play отдаёт частично — проверьте поля, дату/жанр впишите вручную."; }
+      if (data._manual) { msg.className = "fetch-msg err"; msg.textContent = "Google Play не открылся через прокси. Впишите название и поля вручную — рейтинг всё равно посчитается."; }
+      else if (data._partial) { msg.className = "fetch-msg ok"; msg.textContent = "Google Play отдаёт частично — проверьте поля, дату/жанр впишите вручную."; }
       else if (data._emailNote) { msg.className = "fetch-msg ok"; msg.textContent = "Готово. E-mail разработчика Apple не отдаёт — впишите вручную."; }
       else { msg.className = "fetch-msg ok"; msg.textContent = "Готово."; }
     } catch (e) {
@@ -1024,7 +1038,7 @@ window.NEW_BADGE_MS = 3 * 60 * 60 * 1000; // 3 часа
     $("#storeCard").hidden = false;
     $("#scIcon").src = d.icon || "";
     $("#scIcon").style.visibility = d.icon ? "visible" : "hidden";
-    $("#scName").textContent = d.name || "—";
+    $("#scName").value = d.name || "";
     $("#scDev").value = d.developer || "";
     $("#scEmail").value = d.developerEmail || "";
     $("#scRelease").value = d.releaseDate || "";
@@ -1039,7 +1053,7 @@ window.NEW_BADGE_MS = 3 * 60 * 60 * 1000; // 3 часа
     currentStoreMeta.developerEmail = $("#scEmail").value.trim();
     currentStoreMeta.releaseDate    = $("#scRelease").value.trim();
     currentStoreMeta.lastUpdate     = $("#scUpdate").value.trim();
-    currentStoreMeta.name           = $("#scName").textContent.trim();
+    currentStoreMeta.name           = $("#scName").value.trim();
   }
 
   function matchGenre(auto) {
