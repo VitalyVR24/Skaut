@@ -33,6 +33,8 @@
 }
 
 * { box-sizing: border-box; }
+/* атрибут hidden должен побеждать классовые display-правила (.modal-backdrop, .store-card и т.п.) */
+[hidden] { display: none !important; }
 html, body { margin: 0; height: 100%; }
 body {
   font-family: var(--font);
