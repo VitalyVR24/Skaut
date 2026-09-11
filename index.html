@@ -236,6 +236,7 @@ input:focus, select:focus { outline: none; border-color: var(--brand); box-shado
 .top-name { flex: 1; font-weight: 600; }
 .top-sub { font-size: 12px; color: var(--muted); }
 .top-score { font-family: var(--display); font-weight: 700; font-size: 18px; }
+.chart-missing { color: var(--muted); font-size: 13px; padding: 26px 16px; text-align: center; background: var(--line-soft); border-radius: var(--r-sm); }
 
 /* ---------- модалка ---------- */
 .modal-backdrop { position: fixed; inset: 0; background: rgba(20,25,40,.5); backdrop-filter: blur(2px); display: grid; place-items: center; padding: 24px; z-index: 50; }
@@ -477,7 +478,7 @@ input:focus, select:focus { outline: none; border-color: var(--brand); box-shado
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.3/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.js"></script>
 <script>
 
 /* ---------- config.js ---------- */
@@ -1444,15 +1445,26 @@ window.NEW_BADGE_MS = 3 * 60 * 60 * 1000; // 3 часа
      ВКЛАДКА 3 — АНАЛИТИКА
      ============================================================ */
   function renderAnalytics() {
-    if (!$("#view-analytics").classList.contains("active") && PROJECTS.length === 0 && !charts.niche) {
-      // всё равно нарисуем рынок при первом заходе
-    }
     renderKPIs();
-    drawNicheChart();
-    drawGenreChart();
-    drawGradeChart();
-    drawQualChart();
     drawTopList();
+    if (typeof Chart === "undefined") { notifyNoCharts(); return; }
+    try {
+      drawNicheChart(); drawGenreChart(); drawGradeChart(); drawQualChart();
+    } catch (e) { console.error("Не удалось построить графики:", e); notifyNoCharts(); }
+  }
+
+  function notifyNoCharts() {
+    ["chartNiche", "chartByGenre", "chartByGrade", "chartByQual"].forEach(id => {
+      const c = $("#" + id);
+      if (!c || !c.parentElement) return;
+      c.style.display = "none";
+      if (!c.parentElement.querySelector(".chart-missing")) {
+        const d = document.createElement("div");
+        d.className = "chart-missing";
+        d.textContent = "График недоступен: не загрузилась библиотека Chart.js (сеть или блокировщик). Остальное работает.";
+        c.parentElement.appendChild(d);
+      }
+    });
   }
 
   function renderKPIs() {
