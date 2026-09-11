@@ -7,7 +7,282 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css" />
+  <style>
+/* ===========================================================
+   СКАУТ — деск издателя
+   Направление: рабочий рыночный терминал, а не лендинг.
+   Плотно, читаемо, «светофорный» рейтинг — главный герой.
+   =========================================================== */
+:root {
+  --ink:        #191C26;   /* тёмная рама/навигация */
+  --ink-2:      #232734;
+  --ink-line:   #313747;
+  --surface:    #F4F6F9;   /* фон рабочей области */
+  --card:       #FFFFFF;
+  --line:       #E4E7EE;
+  --line-soft:  #EEF1F5;
+  --text:       #1B1E27;
+  --muted:      #6A7180;
+  --muted-2:    #9AA1AF;
+
+  --brand:      #4C5BD4;   /* интерактив */
+  --brand-ink:  #3846B8;
+  --go:         #0E7A57;   /* брать */
+  --go-soft:    #E4F3EC;
+  --watch:      #B47908;   /* на грани */
+  --watch-soft: #FBF0DA;
+  --pass:       #C1443B;   /* пропустить */
+  --pass-soft:  #FBE7E5;
+
+  --r:   12px;
+  --r-sm: 8px;
+  --shadow: 0 1px 2px rgba(20,25,40,.05), 0 8px 24px -12px rgba(20,25,40,.14);
+  --font: "IBM Plex Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, monospace;
+  --display: "Space Grotesk", var(--font);
+}
+
+* { box-sizing: border-box; }
+/* атрибут hidden должен побеждать классовые display-правила (.modal-backdrop, .store-card и т.п.) */
+[hidden] { display: none !important; }
+html, body { margin: 0; height: 100%; }
+body {
+  font-family: var(--font);
+  color: var(--text);
+  background: var(--surface);
+  -webkit-font-smoothing: antialiased;
+  font-size: 14px;
+  line-height: 1.5;
+}
+h1, h2 { margin: 0; font-weight: 600; letter-spacing: -.01em; }
+h1 { font-size: 22px; }
+h2 { font-size: 14px; }
+input, select, button { font-family: inherit; font-size: 14px; color: inherit; }
+
+/* ---------- каркас ---------- */
+.app { display: grid; grid-template-columns: 232px 1fr; min-height: 100vh; }
+
+.rail {
+  background: var(--ink);
+  color: #C7CCDA;
+  padding: 20px 14px;
+  display: flex; flex-direction: column; gap: 4px;
+  position: sticky; top: 0; height: 100vh;
+}
+.brand { display: flex; align-items: center; gap: 11px; padding: 4px 8px 22px; }
+.brand-mark {
+  width: 38px; height: 38px; border-radius: 10px;
+  background: linear-gradient(150deg, var(--brand), #6E79E6);
+  color: #fff; font-family: var(--display); font-weight: 700;
+  display: grid; place-items: center; font-size: 15px; letter-spacing: .02em;
+}
+.brand-name { font-family: var(--display); font-weight: 600; color: #fff; font-size: 16px; letter-spacing: .08em; }
+.brand-sub  { font-size: 11.5px; color: #7B8296; }
+
+.nav-item {
+  display: flex; align-items: center; gap: 11px;
+  background: transparent; border: 0; cursor: pointer;
+  color: #A6ACBD; padding: 10px 12px; border-radius: 9px;
+  text-align: left; width: 100%; transition: background .12s, color .12s;
+}
+.nav-item:hover { background: var(--ink-2); color: #E6E9F1; }
+.nav-item.active { background: var(--ink-2); color: #fff; }
+.nav-item.active .ic { stroke: #fff; }
+.nav-item .ic { width: 19px; height: 19px; fill: none; stroke: #8A91A4; stroke-width: 1.7; }
+.nav-count {
+  margin-left: auto; font-family: var(--mono); font-size: 11px;
+  background: var(--ink-line); color: #C7CCDA; padding: 1px 7px; border-radius: 20px;
+}
+.rail-foot { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--ink-line); }
+.conn { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: #8A91A4; padding: 4px 8px; }
+.conn .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--watch); box-shadow: 0 0 0 3px rgba(180,121,8,.18); }
+.conn.cloud .dot { background: #34C08A; box-shadow: 0 0 0 3px rgba(52,192,138,.18); }
+
+/* ---------- сцена ---------- */
+.stage { padding: 30px 34px 60px; max-width: 1280px; }
+.stage-head { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 22px; }
+.lede { color: var(--muted); margin: 6px 0 0; max-width: 62ch; }
+.view { display: none; }
+.view.active { display: block; animation: fadeIn .18s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .view.active { animation: none; } }
+
+/* ---------- панели / поля ---------- */
+.panel { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; box-shadow: var(--shadow); margin-bottom: 16px; }
+.panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.hint { font-size: 11.5px; color: var(--muted-2); }
+label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: var(--muted); font-weight: 500; }
+input, select {
+  background: #fff; border: 1px solid var(--line); border-radius: var(--r-sm);
+  padding: 9px 11px; color: var(--text); width: 100%; transition: border-color .12s, box-shadow .12s;
+}
+input::placeholder { color: #B7BDC9; }
+input:focus, select:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px rgba(76,91,212,.14); }
+.q { display: inline-grid; place-items: center; width: 15px; height: 15px; border-radius: 50%; background: var(--line); color: var(--muted); font-size: 10px; cursor: help; }
+
+/* ---------- кнопки ---------- */
+.btn { border: 1px solid transparent; border-radius: var(--r-sm); padding: 9px 15px; cursor: pointer; font-weight: 600; transition: background .12s, border-color .12s, transform .05s; white-space: nowrap; }
+.btn:active { transform: translateY(1px); }
+.btn-primary { background: var(--brand); color: #fff; }
+.btn-primary:hover { background: var(--brand-ink); }
+.btn-ghost { background: #fff; border-color: var(--line); color: var(--text); }
+.btn-ghost:hover { border-color: #C9CFDA; background: #FAFBFC; }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+.btn-lg { padding: 12px 22px; }
+.btn-danger { background: var(--pass-soft); color: var(--pass); border-color: transparent; }
+.btn-danger:hover { background: #F6D8D5; }
+
+/* ---------- вкладка ОЦЕНКА ---------- */
+.eval-grid { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
+.url-row { display: flex; gap: 10px; }
+.url-row input { flex: 1; font-family: var(--mono); font-size: 12.5px; }
+.fetch-msg { font-size: 12.5px; margin-top: 10px; min-height: 16px; }
+.fetch-msg.err { color: var(--pass); }
+.fetch-msg.ok  { color: var(--go); }
+.fetch-msg.load { color: var(--muted); }
+
+.store-card { display: flex; gap: 16px; margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--line); }
+.store-icon { width: 76px; height: 76px; border-radius: 16px; object-fit: cover; background: var(--line-soft); flex: none; }
+.store-meta { flex: 1; }
+.sc-name { font-family: var(--display); font-weight: 600; font-size: 18px; margin-bottom: 10px; }
+.sc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
+.sc-platform { display: flex; gap: 8px; margin-top: 12px; }
+.chip { display: inline-flex; align-items: center; font-size: 11.5px; font-weight: 600; padding: 3px 10px; border-radius: 20px; background: var(--ink); color: #fff; }
+.chip.ghost { background: var(--line-soft); color: var(--muted); }
+
+.metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.metrics-grid label:first-child { grid-column: 1 / -1; }
+
+.creative-list { display: flex; flex-direction: column; gap: 10px; }
+.creative-row { display: grid; grid-template-columns: 1fr 130px auto; gap: 8px; align-items: end; }
+.creative-row .rm { border: 1px solid var(--line); background: #fff; color: var(--muted); border-radius: var(--r-sm); width: 38px; height: 38px; cursor: pointer; font-size: 16px; }
+.creative-row .rm:hover { color: var(--pass); border-color: var(--pass); }
+.creative-empty { font-size: 12.5px; color: var(--muted-2); }
+
+.actions { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
+.save-msg { font-size: 13px; color: var(--go); font-weight: 600; }
+
+/* ---------- РЕЙТИНГ (герой) ---------- */
+.col-score { position: sticky; top: 24px; }
+.score-card { background: var(--ink); color: #fff; border-radius: var(--r); padding: 24px; box-shadow: var(--shadow); }
+.score-empty { color: #8A91A4; font-size: 13px; text-align: center; padding: 30px 10px; }
+.score-ring-wrap { display: flex; align-items: center; gap: 18px; }
+.ring { position: relative; width: 118px; height: 118px; flex: none; }
+.ring svg { transform: rotate(-90deg); }
+.ring .val { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+.ring .num { font-family: var(--display); font-weight: 700; font-size: 38px; line-height: 1; }
+.ring .den { font-size: 11px; color: #8A91A4; margin-top: 2px; }
+.grade-block .letter { font-family: var(--display); font-weight: 700; font-size: 30px; line-height: 1; }
+.grade-block .verdict { font-size: 13px; font-weight: 600; margin-top: 2px; }
+.tone-go   { color: #45D9A0; } .tone-go-bg   { background: var(--go); }
+.tone-watch{ color: #F1B44C; } .tone-watch-bg{ background: var(--watch); }
+.tone-pass { color: #F0796F; } .tone-pass-bg { background: var(--pass); }
+
+.niche-tag { margin-top: 18px; padding: 11px 14px; border-radius: var(--r-sm); background: var(--ink-2); display: flex; justify-content: space-between; align-items: center; }
+.niche-tag .nt-label { font-size: 12px; color: #A6ACBD; }
+.niche-tag .nt-val { font-weight: 600; font-size: 13px; }
+.parts { margin-top: 16px; display: flex; flex-direction: column; gap: 11px; }
+.part { font-size: 12px; }
+.part-top { display: flex; justify-content: space-between; color: #C7CCDA; margin-bottom: 5px; }
+.part-top b { color: #fff; font-family: var(--mono); font-weight: 600; }
+.bar { height: 6px; background: var(--ink-line); border-radius: 20px; overflow: hidden; }
+.bar > span { display: block; height: 100%; border-radius: 20px; }
+.completeness { margin-top: 16px; font-size: 11.5px; color: #7B8296; }
+
+/* ---------- вкладка БАЗА ---------- */
+.filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
+.filters input { max-width: 320px; }
+.filters select { width: auto; min-width: 150px; }
+.db-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.pcard { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 15px; box-shadow: var(--shadow); cursor: pointer; position: relative; transition: border-color .12s, transform .08s; }
+.pcard:hover { border-color: #C9CFDA; transform: translateY(-2px); }
+.pcard-top { display: flex; gap: 12px; }
+.pcard-icon { width: 52px; height: 52px; border-radius: 12px; object-fit: cover; background: var(--line-soft); flex: none; }
+.pcard-id { flex: 1; min-width: 0; }
+.pcard-name { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pcard-dev { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pcard-badge {
+  width: 46px; height: 46px; border-radius: 11px; flex: none;
+  display: grid; place-content: center; color: #fff; text-align: center;
+}
+.pcard-badge .sc { font-family: var(--display); font-weight: 700; font-size: 19px; line-height: 1; }
+.pcard-badge .gr { font-size: 9.5px; opacity: .9; }
+.pcard-mid { display: flex; gap: 6px; flex-wrap: wrap; margin: 13px 0 12px; }
+.tagchip { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; background: var(--line-soft); color: var(--muted); }
+.tagchip.genre { background: #EEF0FB; color: var(--brand-ink); }
+.pcard-metrics { display: flex; gap: 16px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line-soft); padding-top: 11px; }
+.pcard-metrics b { color: var(--text); font-family: var(--mono); font-weight: 600; display: block; font-size: 13px; }
+.pcard-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
+.qual-select { font-size: 12px; padding: 5px 8px; border-radius: 6px; border: 1px solid var(--line); }
+.new-badge { position: absolute; top: -8px; right: -8px; background: var(--brand); color: #fff; font-size: 10px; font-weight: 700; letter-spacing: .06em; padding: 3px 8px; border-radius: 20px; box-shadow: 0 4px 10px -3px rgba(76,91,212,.6); }
+
+.empty { text-align: center; padding: 70px 20px; color: var(--muted); }
+.empty-title { font-family: var(--display); font-size: 18px; font-weight: 600; color: var(--text); }
+.empty-sub { margin-top: 6px; }
+
+/* ---------- вкладка АНАЛИТИКА ---------- */
+.kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
+.kpi { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 16px 18px; box-shadow: var(--shadow); }
+.kpi .k-val { font-family: var(--display); font-weight: 700; font-size: 26px; }
+.kpi .k-label { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.ana-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.panel-wide { grid-column: 1 / -1; }
+.top-list { display: flex; flex-direction: column; }
+.top-row { display: flex; align-items: center; gap: 13px; padding: 11px 4px; border-bottom: 1px solid var(--line-soft); cursor: pointer; }
+.top-row:last-child { border-bottom: 0; }
+.top-row:hover { background: #FAFBFD; }
+.top-rank { font-family: var(--mono); color: var(--muted-2); width: 22px; font-size: 13px; }
+.top-icon { width: 34px; height: 34px; border-radius: 8px; object-fit: cover; background: var(--line-soft); }
+.top-name { flex: 1; font-weight: 600; }
+.top-sub { font-size: 12px; color: var(--muted); }
+.top-score { font-family: var(--display); font-weight: 700; font-size: 18px; }
+
+/* ---------- модалка ---------- */
+.modal-backdrop { position: fixed; inset: 0; background: rgba(20,25,40,.5); backdrop-filter: blur(2px); display: grid; place-items: center; padding: 24px; z-index: 50; }
+.modal { background: var(--surface); border-radius: 16px; width: min(760px, 100%); max-height: 90vh; overflow: auto; position: relative; box-shadow: 0 30px 80px -20px rgba(20,25,40,.5); }
+.modal-x { position: absolute; top: 14px; right: 16px; background: #fff; border: 1px solid var(--line); width: 34px; height: 34px; border-radius: 50%; font-size: 20px; cursor: pointer; color: var(--muted); z-index: 2; }
+.modal-x:hover { color: var(--text); }
+.m-head { display: flex; gap: 16px; padding: 24px 24px 18px; }
+.m-icon { width: 72px; height: 72px; border-radius: 16px; object-fit: cover; background: var(--line-soft); flex: none; }
+.m-title { font-family: var(--display); font-size: 20px; font-weight: 600; }
+.m-sub { color: var(--muted); font-size: 13px; margin-top: 3px; }
+.m-badge { margin-left: auto; text-align: center; color: #fff; border-radius: 12px; padding: 12px 16px; align-self: flex-start; }
+.m-badge .s { font-family: var(--display); font-weight: 700; font-size: 26px; line-height: 1; }
+.m-badge .v { font-size: 11px; margin-top: 2px; }
+.m-body { padding: 0 24px 24px; }
+.m-section { background: #fff; border: 1px solid var(--line); border-radius: var(--r); padding: 16px 18px; margin-bottom: 14px; }
+.m-section h3 { margin: 0 0 12px; font-size: 12px; text-transform: none; color: var(--muted); font-weight: 600; }
+.m-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; }
+.m-fields.three { grid-template-columns: 1fr 1fr 1fr; }
+.kv { font-size: 13px; }
+.kv .k { color: var(--muted); font-size: 11.5px; }
+.kv .v { font-weight: 600; font-family: var(--mono); }
+.m-creatives { display: flex; flex-direction: column; gap: 8px; }
+.m-creative { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; padding: 8px 0; border-bottom: 1px solid var(--line-soft); }
+.m-creative a { color: var(--brand-ink); text-decoration: none; word-break: break-all; }
+.m-creative a:hover { text-decoration: underline; }
+.m-creative .aud { font-family: var(--mono); color: var(--muted); white-space: nowrap; }
+.m-parts .part-top { color: var(--muted); }
+.m-parts .part-top b { color: var(--text); }
+.m-parts .bar { background: var(--line-soft); }
+.m-actions { display: flex; gap: 10px; margin-top: 6px; }
+.m-note { width: 100%; min-height: 70px; resize: vertical; border: 1px solid var(--line); border-radius: var(--r-sm); padding: 10px; font-family: inherit; }
+.edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.edit-grid label:first-child { grid-column: 1 / -1; }
+
+/* ---------- адаптив ---------- */
+@media (max-width: 960px) {
+  .app { grid-template-columns: 1fr; }
+  .rail { position: static; height: auto; flex-direction: row; align-items: center; flex-wrap: wrap; }
+  .brand { padding: 4px 8px; }
+  .rail-foot { margin: 0 0 0 auto; padding-top: 0; border: 0; }
+  .eval-grid, .ana-grid { grid-template-columns: 1fr; }
+  .col-score { position: static; }
+  .kpi-row { grid-template-columns: 1fr 1fr; }
+  .stage { padding: 20px; }
+}
+
+  </style>
 </head>
 <body>
 <div class="app">
@@ -203,10 +478,1097 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.3/chart.umd.min.js"></script>
-<script src="config.js"></script>
-<script src="rating.js"></script>
-<script src="stores.js"></script>
-<script src="db.js"></script>
-<script src="app.js"></script>
+<script>
+
+/* ---------- config.js ---------- */
+/* =============================================================
+   СКАУТ — конфигурация
+   Здесь три вещи, которые можно править под себя:
+   1) FIREBASE_CONFIG — подключение общей базы (см. README)
+   2) NICHE_BENCHMARKS — ориентиры по нишам (доход/рост/конкуренция)
+   3) QUALIFICATIONS — статусы квалификации проекта
+   ============================================================= */
+
+/* ---------- 1. Firebase (общая база для нескольких пользователей) ----------
+   Пока стоят "PASTE_...", приложение работает в ЛОКАЛЬНОМ режиме
+   (данные только на этом устройстве). Как включить общую базу — в README.md. */
+window.FIREBASE_CONFIG = {
+  apiKey:            "PASTE_API_KEY",
+  authDomain:        "PASTE_AUTH_DOMAIN",
+  projectId:         "PASTE_PROJECT_ID",
+  storageBucket:     "PASTE_STORAGE_BUCKET",
+  messagingSenderId: "PASTE_SENDER_ID",
+  appId:             "PASTE_APP_ID"
+};
+
+/* ---------- 2. Ориентиры по нишам ----------
+   Это КАЛИБРОВОЧНЫЕ значения (осень 2025 → 2026, по данным Sensor Tower /
+   GameRefinery / Udonis). Правьте под свой опыт и данные — рейтинг сразу
+   пересчитается.
+     growth        — насколько ниша сейчас растёт (0–100)
+     revenueIndex  — потенциал дохода / глубина монетизации (0–100)
+     competition   — насыщенность рынка, выше = сложнее пробиться (0–100)
+     benchRPD      — ориентир RPD (доход в день) для среднего масштабируемого тайтла, $
+     benchRev30d   — ориентир дохода за 30 дней для среднего тайтла, $
+*/
+window.NICHE_BENCHMARKS = {
+  "Hybrid-casual": { growth: 92, revenueIndex: 62, competition: 58, benchRPD: 800,  benchRev30d: 25000,  note: "Самый горячий рост IAP (+37% YoY). Гибридная монетизация IAA+IAP." },
+  "Action":        { growth: 90, revenueIndex: 70, competition: 66, benchRPD: 1200, benchRev30d: 40000,  note: "Самый резкий рост дохода (+46%). Креатив-френдли." },
+  "4X / Strategy": { growth: 85, revenueIndex: 95, competition: 88, benchRPD: 4000, benchRev30d: 180000, note: "Топ по доходу (~10% всего рынка), но дорогой UA и высокий порог." },
+  "Strategy":      { growth: 78, revenueIndex: 90, competition: 85, benchRPD: 3000, benchRev30d: 130000, note: "$17.5B, +16% YoY. Максимальный доход на инсталл." },
+  "Battle Royale": { growth: 70, revenueIndex: 82, competition: 80, benchRPD: 2500, benchRev30d: 90000,  note: "Лидер по времени в игре, сильный live-ops." },
+  "Casino":        { growth: 64, revenueIndex: 80, competition: 70, benchRPD: 2000, benchRev30d: 85000,  note: "Высокий ARPU, стабильный спрос." },
+  "Puzzle":        { growth: 66, revenueIndex: 74, competition: 80, benchRPD: 1000, benchRev30d: 45000,  note: "+14% YoY, ревайвл match-3, но рынок насыщен." },
+  "Simulation":    { growth: 60, revenueIndex: 58, competition: 62, benchRPD: 700,  benchRev30d: 28000,  note: "Лидер по загрузкам, средняя монетизация." },
+  "Idle":          { growth: 58, revenueIndex: 52, competition: 60, benchRPD: 500,  benchRev30d: 18000,  note: "Монетизация через rewarded video, стабильно." },
+  "Card / Board":  { growth: 52, revenueIndex: 55, competition: 55, benchRPD: 700,  benchRev30d: 24000,  note: "Ниша с умеренной конкуренцией." },
+  "Hyper-casual":  { growth: 50, revenueIndex: 30, competition: 72, benchRPD: 300,  benchRev30d: 9000,   note: "Двигатель загрузок, но низкий доход на пользователя." },
+  "Casual":        { growth: 48, revenueIndex: 55, competition: 78, benchRPD: 600,  benchRev30d: 22000,  note: "Доход плоский, проседает retention." },
+  "MOBA":          { growth: 45, revenueIndex: 85, competition: 90, benchRPD: 3000, benchRev30d: 120000, note: "Зрелый жанр, очень высокий порог входа." },
+  "Sports":        { growth: 38, revenueIndex: 60, competition: 65, benchRPD: 900,  benchRev30d: 30000,  note: "Ожидается спад интереса." },
+  "Arcade":        { growth: 40, revenueIndex: 45, competition: 70, benchRPD: 400,  benchRev30d: 12000,  note: "Снижающийся сегмент." },
+  "RPG":           { growth: 30, revenueIndex: 88, competition: 88, benchRPD: 2500, benchRev30d: 110000, note: "Доход высокий, но −17% YoY. Рынок остывает." },
+  "Другое":        { growth: 50, revenueIndex: 50, competition: 60, benchRPD: 800,  benchRev30d: 25000,  note: "Базовый ориентир, если жанр не из списка." }
+};
+
+/* ---------- 3. Статусы квалификации ---------- */
+window.QUALIFICATIONS = [
+  { id: "new",         label: "Новый",        color: "#4C5BD4" },
+  { id: "interested",  label: "Интересно",    color: "#12876A" },
+  { id: "not",         label: "Не интересно", color: "#8A909C" },
+  { id: "contacted",   label: "Написали",     color: "#C98A16" },
+  { id: "reply",       label: "Есть ответ",   color: "#2C7BBE" },
+  { id: "negotiation", label: "Переговоры",   color: "#7A4FD0" },
+  { id: "signed",      label: "Взяли",        color: "#0E7A57" },
+  { id: "declined",    label: "Отказ",        color: "#C1443B" }
+];
+
+/* Метка NEW держится столько миллисекунд после добавления */
+window.NEW_BADGE_MS = 3 * 60 * 60 * 1000; // 3 часа
+
+
+/* ---------- rating.js ---------- */
+/* =============================================================
+   Движок рейтинга.
+   На вход — данные проекта, на выход — оценка 0–100, буква,
+   вердикт и разбивка по компонентам (показывается в карточке проекта).
+   ============================================================= */
+(function () {
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  const log2  = (x) => Math.log(x) / Math.log(2);
+
+  function benchFor(genre) {
+    return window.NICHE_BENCHMARKS[genre] || window.NICHE_BENCHMARKS["Другое"];
+  }
+
+  // Насколько ниша сама по себе перспективна (0–100)
+  function nicheScore(genre) {
+    const b = benchFor(genre);
+    return clamp(0.6 * b.growth + 0.4 * b.revenueIndex, 0, 100);
+  }
+
+  function nicheLabel(score) {
+    if (score >= 80) return { text: "Горячая ниша",   tone: "go"    };
+    if (score >= 65) return { text: "Сильная ниша",   tone: "go"    };
+    if (score >= 50) return { text: "Средняя ниша",   tone: "watch" };
+    return               { text: "Слабая ниша",    tone: "pass"  };
+  }
+
+  /* Главная функция. p — объект проекта с числовыми полями:
+     genre, revenue30d, rpd, installs, organic (в %) */
+  function compute(p) {
+    const b = benchFor(p.genre);
+    const parts = [];
+    const add = (key, label, weight, value, hint) => {
+      if (value === null || value === undefined || Number.isNaN(value)) return;
+      parts.push({ key, label, weight, value: clamp(value, 0, 100), hint });
+    };
+
+    // 1. Ниша (есть всегда, если выбран жанр)
+    const nScore = nicheScore(p.genre);
+    add("niche", "Ниша", 0.35, nScore,
+        `${b.note}`);
+
+    // 2. Доход за 30 дней относительно ориентира ниши
+    if (num(p.revenue30d) > 0) {
+      const ratio = num(p.revenue30d) / b.benchRev30d;
+      add("revenue", "Доход vs ниша", 0.30, clamp(50 + 22 * log2(ratio), 0, 100),
+          `$${fmt(p.revenue30d)} при ориентире ниши ~$${fmt(b.benchRev30d)}/мес`);
+    }
+
+    // 3. RPD относительно ориентира ниши
+    if (num(p.rpd) > 0) {
+      const ratio = num(p.rpd) / b.benchRPD;
+      add("rpd", "RPD vs ниша", 0.15, clamp(50 + 22 * log2(ratio), 0, 100),
+          `$${fmt(p.rpd)}/день при ориентире ~$${fmt(b.benchRPD)}/день`);
+    }
+
+    // 4. Здоровье органики (выше органика = дешевле масштабировать)
+    if (p.organic !== null && p.organic !== undefined && p.organic !== "") {
+      const org = num(p.organic);
+      add("organic", "Органика", 0.12, clamp(org * 2, 0, 100),
+          `${org}% органических установок`);
+    }
+
+    // 5. Ценность инсталла (доход / инсталлы за 30 дней)
+    if (num(p.revenue30d) > 0 && num(p.installs) > 0) {
+      const vpi = num(p.revenue30d) / num(p.installs);
+      add("vpi", "Доход на инсталл", 0.08, clamp(50 + 30 * log2(vpi / 0.5), 0, 100),
+          `$${vpi.toFixed(2)} с инсталла`);
+    }
+
+    // Взвешенная сумма с ренормализацией весов по имеющимся данным
+    const wsum = parts.reduce((s, x) => s + x.weight, 0) || 1;
+    const score = Math.round(parts.reduce((s, x) => s + x.value * x.weight, 0) / wsum);
+
+    return {
+      score,
+      grade: grade(score),
+      niche: { score: Math.round(nScore), ...nicheLabel(nScore) },
+      parts,
+      dataCompleteness: Math.round((parts.length / 5) * 100)
+    };
+  }
+
+  function grade(score) {
+    if (score >= 80) return { letter: "A", verdict: "Брать",       tone: "go"    };
+    if (score >= 65) return { letter: "B", verdict: "Рассмотреть", tone: "go"    };
+    if (score >= 50) return { letter: "C", verdict: "На грани",    tone: "watch" };
+    if (score >= 35) return { letter: "D", verdict: "Слабо",       tone: "pass"  };
+    return               { letter: "E", verdict: "Пропустить",  tone: "pass"  };
+  }
+
+  // helpers
+  function num(v) { const n = parseFloat(v); return Number.isFinite(n) ? n : 0; }
+  function fmt(v) {
+    const n = num(v);
+    if (n >= 1000) return Math.round(n).toLocaleString("ru-RU");
+    return String(n);
+  }
+
+  window.Rating = { compute, nicheScore, nicheLabel, grade };
+})();
+
+
+/* ---------- stores.js ---------- */
+/* =============================================================
+   Вытягивание данных по ссылке из стора.
+   • App Store — официальный iTunes Lookup API (надёжно, кроме email:
+     Apple его не отдаёт вовсе).
+   • Google Play — офиц. API нет, тянем страницу через публичный
+     CORS-прокси и парсим мета-теги (название/иконка надёжно, дата и
+     email — как повезёт; при сбое поля просто останутся пустыми).
+   ============================================================= */
+(function () {
+
+  function detect(url) {
+    if (/apps\.apple\.com|itunes\.apple\.com/i.test(url)) return "ios";
+    if (/play\.google\.com/i.test(url)) return "android";
+    return null;
+  }
+
+  async function fromUrl(url) {
+    url = (url || "").trim();
+    const platform = detect(url);
+    if (!platform) throw new Error("Не похоже на ссылку App Store или Google Play.");
+    return platform === "ios" ? fromAppStore(url) : fromGooglePlay(url);
+  }
+
+  /* ---------------- App Store ---------------- */
+  async function fromAppStore(url) {
+    const m = url.match(/id(\d+)/);
+    if (!m) throw new Error("В ссылке App Store не найден id приложения.");
+    const id = m[1];
+    const cc = (url.match(/apple\.com\/([a-z]{2})\//i) || [])[1] || "us";
+
+    const endpoint = `https://itunes.apple.com/lookup?id=${id}&country=${cc}`;
+    let data;
+    try {
+      const r = await fetch(endpoint);
+      data = await r.json();
+    } catch (e) {
+      data = await jsonp(endpoint); // запасной путь, если CORS капризничает
+    }
+    if (!data || !data.results || !data.results.length)
+      throw new Error("App Store не вернул данные по этому id.");
+
+    const a = data.results[0];
+    return {
+      platform: "ios",
+      storeUrl: url,
+      name: a.trackName || "",
+      developer: a.artistName || a.sellerName || "",
+      developerEmail: "",            // Apple не отдаёт email — вручную
+      icon: a.artworkUrl512 || a.artworkUrl100 || a.artworkUrl60 || "",
+      releaseDate: shortDate(a.releaseDate),
+      lastUpdate: shortDate(a.currentVersionReleaseDate),
+      genreAuto: a.primaryGenreName || "",
+      _emailNote: true
+    };
+  }
+
+  /* ---------------- Google Play ---------------- */
+  async function fromGooglePlay(url) {
+    const m = url.match(/[?&]id=([a-zA-Z0-9._]+)/);
+    if (!m) throw new Error("В ссылке Google Play не найден package id.");
+    const pkg = m[1];
+
+    const html = await fetchViaProxy(url);
+    const pick = (re) => { const x = html.match(re); return x ? decode(x[1]).trim() : ""; };
+
+    const rawTitle = pick(/<meta property="og:title" content="([^"]+)"/i)
+                  || pick(/<title>([^<]+)<\/title>/i);
+    const name = rawTitle.replace(/\s*[-–—]\s*(Apps on Google Play|Google Play|Приложения в Google Play).*$/i, "").trim();
+    const icon = pick(/<meta property="og:image" content="([^"]+)"/i);
+
+    // Разработчик и e-mail — по возможности (структура страницы меняется).
+    let developer = "";
+    const devMatch = html.match(/"author":\s*{[^}]*"name":\s*"([^"]+)"/i)
+                  || html.match(/<meta name="appstore:developer_url"[^>]*>/i);
+    if (devMatch && devMatch[1]) developer = decode(devMatch[1]).trim();
+
+    let developerEmail = "";
+    const emailMatch = html.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+    if (emailMatch) developerEmail = emailMatch[0];
+
+    if (!name && !icon) {
+      throw new Error("Не удалось прочитать страницу Google Play (прокси/лимит). Заполните поля вручную.");
+    }
+
+    return {
+      platform: "android",
+      storeUrl: url,
+      name: name || pkg,
+      developer,
+      developerEmail,
+      icon,
+      releaseDate: "",   // на странице стабильно не отдаётся
+      lastUpdate: "",
+      genreAuto: pick(/<meta name="appstore:bundle_id"[^>]*>/i) ? "" : "",
+      _partial: true
+    };
+  }
+
+  /* ---------------- утилиты ---------------- */
+
+  // Публичные CORS-прокси. Пробуем по очереди.
+  async function fetchViaProxy(target) {
+    const proxies = [
+      (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+      (u) => `https://corsproxy.io/?url=${encodeURIComponent(u)}`
+    ];
+    let lastErr;
+    for (const build of proxies) {
+      try {
+        const r = await fetch(build(target), { headers: { "Accept": "text/html" } });
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        const t = await r.text();
+        if (t && t.length > 500) return t;
+      } catch (e) { lastErr = e; }
+    }
+    throw lastErr || new Error("Прокси недоступны.");
+  }
+
+  // JSONP-фолбэк для iTunes
+  function jsonp(url) {
+    return new Promise((resolve, reject) => {
+      const cb = "__scout_cb_" + Math.random().toString(36).slice(2);
+      const s = document.createElement("script");
+      const timer = setTimeout(() => { cleanup(); reject(new Error("timeout")); }, 8000);
+      function cleanup() { clearTimeout(timer); delete window[cb]; s.remove(); }
+      window[cb] = (data) => { cleanup(); resolve(data); };
+      s.src = url + (url.includes("?") ? "&" : "?") + "callback=" + cb;
+      s.onerror = () => { cleanup(); reject(new Error("jsonp error")); };
+      document.head.appendChild(s);
+    });
+  }
+
+  function shortDate(iso) {
+    if (!iso) return "";
+    const d = new Date(iso);
+    if (isNaN(d)) return "";
+    return d.toISOString().slice(0, 10);
+  }
+  function decode(s) {
+    const t = document.createElement("textarea");
+    t.innerHTML = s;
+    return t.value;
+  }
+
+  window.Stores = { fromUrl, detect };
+})();
+
+
+/* ---------- db.js ---------- */
+/* =============================================================
+   Слой данных.
+   • Если Firebase настроен — общая база в реальном времени (все
+     пользователи по одной ссылке видят изменения сразу; requirement
+     «актуализировать каждые ~10 минут» покрывается онлайн-синхроном).
+   • Если нет — локальный режим (localStorage), синхронизация между
+     вкладками одного браузера + метка режима в интерфейсе.
+   Единый API: DB.init(), DB.subscribe(cb), DB.onTick(cb),
+                DB.add(p), DB.update(id,patch), DB.remove(id), DB.mode
+   ============================================================= */
+(function () {
+  const LS_KEY = "scout_projects_v1";
+  const COLLECTION = "projects";
+
+  let mode = "local";            // 'cloud' | 'local'
+  let fs = null;                 // firestore instance
+  let items = [];                // текущий список
+  const subs = [];               // подписчики на данные
+  const ticks = [];              // подписчики на «тик» (обновление меток NEW/времени)
+
+  function configured() {
+    const c = window.FIREBASE_CONFIG || {};
+    return c.apiKey && !String(c.apiKey).startsWith("PASTE_") &&
+           c.projectId && !String(c.projectId).startsWith("PASTE_");
+  }
+
+  function init() {
+    if (configured() && window.firebase) {
+      try {
+        firebase.initializeApp(window.FIREBASE_CONFIG);
+        fs = firebase.firestore();
+        mode = "cloud";
+        fs.collection(COLLECTION).onSnapshot((snap) => {
+          items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          notify();
+        }, (err) => {
+          console.error("Firestore error, откат в локальный режим:", err);
+          fallbackLocal();
+        });
+      } catch (e) {
+        console.error("Firebase init failed:", e);
+        fallbackLocal();
+      }
+    } else {
+      fallbackLocal();
+    }
+
+    // общий тикер: обновляет метки NEW и относительное время каждые 60 c
+    setInterval(() => ticks.forEach(fn => fn()), 60 * 1000);
+    // мягкая переотрисовка списка каждые 60 c (на случай local-режима)
+    setInterval(() => notify(), 60 * 1000);
+    DB.mode = mode;
+    return mode;
+  }
+
+  function fallbackLocal() {
+    mode = "local";
+    DB.mode = "local";
+    loadLocal();
+    window.addEventListener("storage", (e) => {
+      if (e.key === LS_KEY) { loadLocal(); notify(); }
+    });
+  }
+
+  function loadLocal() {
+    try { items = JSON.parse(localStorage.getItem(LS_KEY) || "[]"); }
+    catch { items = []; }
+  }
+  function persistLocal() {
+    localStorage.setItem(LS_KEY, JSON.stringify(items));
+  }
+
+  function notify() { subs.forEach(fn => fn(items.slice())); }
+
+  function subscribe(cb) { subs.push(cb); cb(items.slice()); }
+  function onTick(cb)   { ticks.push(cb); }
+
+  async function add(p) {
+    const now = Date.now();
+    const rec = { ...p, createdAt: now, updatedAt: now };
+    if (mode === "cloud") {
+      const ref = fs.collection(COLLECTION).doc();
+      await ref.set(rec);
+      return ref.id;
+    } else {
+      rec.id = uid();
+      items.push(rec); persistLocal(); notify();
+      return rec.id;
+    }
+  }
+
+  async function update(id, patch) {
+    const data = { ...patch, updatedAt: Date.now() };
+    if (mode === "cloud") {
+      await fs.collection(COLLECTION).doc(id).update(data);
+    } else {
+      const i = items.findIndex(x => x.id === id);
+      if (i >= 0) { items[i] = { ...items[i], ...data }; persistLocal(); notify(); }
+    }
+  }
+
+  async function remove(id) {
+    if (mode === "cloud") {
+      await fs.collection(COLLECTION).doc(id).delete();
+    } else {
+      items = items.filter(x => x.id !== id); persistLocal(); notify();
+    }
+  }
+
+  function uid() {
+    return (crypto.randomUUID && crypto.randomUUID()) ||
+           (Date.now().toString(36) + Math.random().toString(36).slice(2));
+  }
+
+  const DB = { init, subscribe, onTick, add, update, remove, mode };
+  window.DB = DB;
+})();
+
+
+/* ---------- app.js ---------- */
+/* =============================================================
+   СКАУТ — интерфейс и логика
+   ============================================================= */
+(function () {
+  "use strict";
+  const $  = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const GENRES = Object.keys(window.NICHE_BENCHMARKS);
+  const QUALS  = window.QUALIFICATIONS;
+  const qualById = (id) => QUALS.find(q => q.id === id) || QUALS[0];
+
+  let PROJECTS = [];          // текущий срез базы
+  let currentStoreMeta = {};  // авто-данные из стора для формы
+  let charts = {};            // инстансы Chart.js
+
+  /* ---------------- запуск ---------------- */
+  function boot() {
+    fillGenreSelects();
+    bindNav();
+    bindEvaluate();
+    bindDatabase();
+    bindModal();
+
+    const mode = DB.init();
+    setConn(mode);
+    DB.subscribe(onData);
+    DB.onTick(() => { renderDatabase(); });   // обновляет метки NEW/время
+    renderScore(null);
+    addCreativeRow(); // одна пустая строка креатива по умолчанию
+  }
+
+  function setConn(mode) {
+    const el = $("#connStatus"), lbl = $("#connLabel");
+    if (mode === "cloud") { el.classList.add("cloud"); lbl.textContent = "Общая база онлайн"; }
+    else { el.classList.remove("cloud"); lbl.textContent = "Локальный режим"; }
+  }
+
+  function onData(items) {
+    PROJECTS = items;
+    $("#navCount").textContent = items.length || "";
+    renderDatabase();
+    renderAnalytics();
+  }
+
+  /* ---------------- навигация ---------------- */
+  function bindNav() {
+    $$(".nav-item").forEach(btn => btn.addEventListener("click", () => {
+      $$(".nav-item").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      const v = btn.dataset.view;
+      $$(".view").forEach(s => s.classList.remove("active"));
+      $("#view-" + v).classList.add("active");
+      if (v === "analytics") renderAnalytics();
+    }));
+  }
+
+  function fillGenreSelects() {
+    const opts = GENRES.map(g => `<option value="${g}">${g}</option>`).join("");
+    $("#mGenre").innerHTML = opts;
+    $("#fGenre").insertAdjacentHTML("beforeend", opts);
+    $("#fQual").insertAdjacentHTML("beforeend",
+      QUALS.map(q => `<option value="${q.id}">${q.label}</option>`).join(""));
+  }
+
+  /* ============================================================
+     ВКЛАДКА 1 — ОЦЕНКА
+     ============================================================ */
+  function bindEvaluate() {
+    $("#fetchBtn").addEventListener("click", fetchStore);
+    $("#storeUrl").addEventListener("keydown", e => { if (e.key === "Enter") fetchStore(); });
+    $("#addCreative").addEventListener("click", () => addCreativeRow());
+    $("#saveBtn").addEventListener("click", saveProject);
+    $("#resetBtn").addEventListener("click", resetForm);
+    ["#mGenre", "#mRpd", "#mRev", "#mInstalls", "#mOrganic"].forEach(sel =>
+      $(sel).addEventListener("input", liveScore));
+    ["#scDev", "#scEmail", "#scRelease", "#scUpdate"].forEach(sel =>
+      $(sel).addEventListener("input", syncStoreMeta));
+  }
+
+  async function fetchStore() {
+    const url = $("#storeUrl").value.trim();
+    const msg = $("#fetchMsg");
+    if (!url) { msg.className = "fetch-msg err"; msg.textContent = "Вставьте ссылку из App Store или Google Play."; return; }
+    msg.className = "fetch-msg load"; msg.textContent = "Читаю стор…";
+    try {
+      const data = await Stores.fromUrl(url);
+      currentStoreMeta = data;
+      showStoreCard(data);
+      // угадываем жанр из авто-данных
+      const guess = matchGenre(data.genreAuto);
+      if (guess) { $("#mGenre").value = guess; }
+      liveScore();
+      if (data._partial) { msg.className = "fetch-msg ok"; msg.textContent = "Google Play отдаёт частично — проверьте поля, дату/жанр впишите вручную."; }
+      else if (data._emailNote) { msg.className = "fetch-msg ok"; msg.textContent = "Готово. E-mail разработчика Apple не отдаёт — впишите вручную."; }
+      else { msg.className = "fetch-msg ok"; msg.textContent = "Готово."; }
+    } catch (e) {
+      msg.className = "fetch-msg err"; msg.textContent = e.message || "Не удалось прочитать стор.";
+    }
+  }
+
+  function showStoreCard(d) {
+    $("#storeCard").hidden = false;
+    $("#scIcon").src = d.icon || "";
+    $("#scIcon").style.visibility = d.icon ? "visible" : "hidden";
+    $("#scName").textContent = d.name || "—";
+    $("#scDev").value = d.developer || "";
+    $("#scEmail").value = d.developerEmail || "";
+    $("#scRelease").value = d.releaseDate || "";
+    $("#scUpdate").value = d.lastUpdate || "";
+    $("#scPlatform").textContent = d.platform === "ios" ? "App Store" : "Google Play";
+    $("#scGenreAuto").textContent = d.genreAuto || "";
+    $("#scGenreAuto").hidden = !d.genreAuto;
+  }
+
+  function syncStoreMeta() {
+    currentStoreMeta.developer      = $("#scDev").value.trim();
+    currentStoreMeta.developerEmail = $("#scEmail").value.trim();
+    currentStoreMeta.releaseDate    = $("#scRelease").value.trim();
+    currentStoreMeta.lastUpdate     = $("#scUpdate").value.trim();
+    currentStoreMeta.name           = $("#scName").textContent.trim();
+  }
+
+  function matchGenre(auto) {
+    if (!auto) return "";
+    const a = auto.toLowerCase();
+    for (const g of GENRES) if (g.toLowerCase().includes(a) || a.includes(g.toLowerCase())) return g;
+    if (/role|rpg/.test(a)) return "RPG";
+    if (/puzzle/.test(a)) return "Puzzle";
+    if (/strateg/.test(a)) return "Strategy";
+    if (/action/.test(a)) return "Action";
+    if (/simulat/.test(a)) return "Simulation";
+    if (/casino/.test(a)) return "Casino";
+    if (/arcade/.test(a)) return "Arcade";
+    if (/board|card/.test(a)) return "Card / Board";
+    if (/sport/.test(a)) return "Sports";
+    return "";
+  }
+
+  /* креативы */
+  function addCreativeRow(url = "", audience = "") {
+    const list = $("#creativeList");
+    const row = document.createElement("div");
+    row.className = "creative-row";
+    row.innerHTML = `
+      <label>Ссылка на креатив<input class="cr-url" value="${escAttr(url)}" placeholder="https://…" /></label>
+      <label>Аудитория<input class="cr-aud" value="${escAttr(audience)}" placeholder="напр. 2.4M" /></label>
+      <button class="rm" title="Удалить" type="button">×</button>`;
+    row.querySelector(".rm").addEventListener("click", () => { row.remove(); ensureCreativeHint(); });
+    list.appendChild(row);
+    ensureCreativeHint();
+  }
+  function ensureCreativeHint() {
+    const list = $("#creativeList");
+    if (!list.querySelector(".creative-row")) list.innerHTML = `<div class="creative-empty">Креативов пока нет.</div>`;
+    else { const e = list.querySelector(".creative-empty"); if (e) e.remove(); }
+  }
+  function collectCreatives() {
+    return $$(".creative-row").map(r => ({
+      url: r.querySelector(".cr-url").value.trim(),
+      audience: r.querySelector(".cr-aud").value.trim()
+    })).filter(c => c.url || c.audience);
+  }
+
+  /* живой рейтинг в правой колонке */
+  function formToProject() {
+    return {
+      ...currentStoreMeta,
+      genre:      $("#mGenre").value,
+      rpd:        $("#mRpd").value,
+      revenue30d: $("#mRev").value,
+      installs:   $("#mInstalls").value,
+      organic:    $("#mOrganic").value,
+      creatives:  collectCreatives()
+    };
+  }
+  function liveScore() { renderScore(formToProject()); }
+
+  function renderScore(p) {
+    const box = $("#scorePreview");
+    if (!p || !p.genre) {
+      box.innerHTML = `<div class="score-empty">Выберите жанр и введите показатели — рейтинг посчитается здесь.</div>`;
+      return;
+    }
+    const r = Rating.compute(p);
+    box.innerHTML = scoreHTML(r);
+  }
+
+  function scoreHTML(r) {
+    const tone = r.grade.tone;
+    const C = 2 * Math.PI * 52;
+    const dash = (r.score / 100) * C;
+    const parts = r.parts.map(pt => `
+      <div class="part">
+        <div class="part-top"><span>${pt.label}</span><b>${Math.round(pt.value)}</b></div>
+        <div class="bar"><span class="tone-${toneOf(pt.value)}-bg" style="width:${pt.value}%"></span></div>
+      </div>`).join("");
+    return `
+      <div class="score-ring-wrap">
+        <div class="ring">
+          <svg width="118" height="118" viewBox="0 0 118 118">
+            <circle cx="59" cy="59" r="52" fill="none" stroke="#313747" stroke-width="10"/>
+            <circle cx="59" cy="59" r="52" fill="none" stroke="${toneColor(tone)}" stroke-width="10"
+                    stroke-linecap="round" stroke-dasharray="${dash} ${C}"/>
+          </svg>
+          <div class="val"><div class="num">${r.score}</div><div class="den">из 100</div></div>
+        </div>
+        <div class="grade-block">
+          <div class="letter tone-${tone}">${r.grade.letter}</div>
+          <div class="verdict tone-${tone}">${r.grade.verdict}</div>
+        </div>
+      </div>
+      <div class="niche-tag">
+        <span class="nt-label">Ниша</span>
+        <span class="nt-val tone-${r.niche.tone}">${r.niche.text} · ${r.niche.score}</span>
+      </div>
+      <div class="parts">${parts}</div>
+      <div class="completeness">Заполнено данных: ${r.dataCompleteness}% — чем больше, тем точнее рейтинг.</div>`;
+  }
+  const toneOf = (v) => v >= 65 ? "go" : v >= 45 ? "watch" : "pass";
+  const toneColor = (t) => t === "go" ? "#34C08A" : t === "watch" ? "#E7A93B" : "#F0796F";
+
+  async function saveProject() {
+    syncStoreMeta();
+    const p = formToProject();
+    if (!p.name) { flashSave("Сначала заполните карточку из стора или введите название.", true); return; }
+    if (!p.genre) { flashSave("Выберите жанр.", true); return; }
+    const r = Rating.compute(p);
+    const rec = {
+      storeUrl: p.storeUrl || $("#storeUrl").value.trim() || "",
+      platform: p.platform || "",
+      name: p.name,
+      developer: p.developer || "",
+      developerEmail: p.developerEmail || "",
+      icon: p.icon || "",
+      releaseDate: p.releaseDate || "",
+      lastUpdate: p.lastUpdate || "",
+      genre: p.genre,
+      rpd: numOrNull(p.rpd),
+      revenue30d: numOrNull(p.revenue30d),
+      installs: numOrNull(p.installs),
+      organic: numOrNull(p.organic),
+      creatives: p.creatives || [],
+      score: r.score,
+      grade: r.grade.letter,
+      qualification: "new",
+      note: ""
+    };
+    try {
+      await DB.add(rec);
+      flashSave("Добавлено в базу ✓", false);
+      setTimeout(resetForm, 500);
+    } catch (e) {
+      flashSave("Не удалось сохранить: " + (e.message || e), true);
+    }
+  }
+  function flashSave(text, err) {
+    const el = $("#saveMsg");
+    el.textContent = text;
+    el.style.color = err ? "var(--pass)" : "var(--go)";
+  }
+  function resetForm() {
+    ["#storeUrl", "#mRpd", "#mRev", "#mInstalls", "#mOrganic"].forEach(s => $(s).value = "");
+    $("#storeCard").hidden = true;
+    $("#fetchMsg").textContent = "";
+    $("#saveMsg").textContent = "";
+    $("#creativeList").innerHTML = "";
+    currentStoreMeta = {};
+    addCreativeRow();
+    renderScore(null);
+  }
+
+  /* ============================================================
+     ВКЛАДКА 2 — БАЗА
+     ============================================================ */
+  function bindDatabase() {
+    ["#fSearch", "#fGenre", "#fQual", "#fSort"].forEach(s =>
+      $(s).addEventListener("input", renderDatabase));
+  }
+
+  function filteredProjects() {
+    const q  = $("#fSearch").value.trim().toLowerCase();
+    const g  = $("#fGenre").value;
+    const ql = $("#fQual").value;
+    const sort = $("#fSort").value;
+    let list = PROJECTS.filter(p => {
+      if (g && p.genre !== g) return false;
+      if (ql && (p.qualification || "new") !== ql) return false;
+      if (q && !(`${p.name} ${p.developer}`.toLowerCase().includes(q))) return false;
+      return true;
+    });
+    list.sort((a, b) => {
+      if (sort === "new") return (b.createdAt || 0) - (a.createdAt || 0);
+      if (sort === "rev") return (b.revenue30d || 0) - (a.revenue30d || 0);
+      return (b.score || 0) - (a.score || 0);
+    });
+    return list;
+  }
+
+  function renderDatabase() {
+    const grid = $("#dbGrid"), empty = $("#dbEmpty");
+    const list = filteredProjects();
+    empty.hidden = PROJECTS.length !== 0;
+    if (!list.length && PROJECTS.length) { grid.innerHTML = `<div class="empty-sub" style="padding:20px">Ничего не найдено под фильтры.</div>`; return; }
+    grid.innerHTML = list.map(cardHTML).join("");
+    // события
+    $$(".pcard").forEach(card => {
+      const id = card.dataset.id;
+      card.addEventListener("click", (e) => {
+        if (e.target.closest(".qual-select")) return;
+        openModal(id);
+      });
+      const sel = card.querySelector(".qual-select");
+      if (sel) sel.addEventListener("change", (e) => DB.update(id, { qualification: e.target.value }));
+    });
+  }
+
+  function cardHTML(p) {
+    const tone = gradeTone(p.score);
+    const isNew = (Date.now() - (p.createdAt || 0)) < window.NEW_BADGE_MS;
+    const q = qualById(p.qualification || "new");
+    return `
+      <div class="pcard" data-id="${p.id}">
+        ${isNew ? `<span class="new-badge">NEW</span>` : ""}
+        <div class="pcard-top">
+          <img class="pcard-icon" src="${escAttr(p.icon)}" alt="" onerror="this.style.visibility='hidden'"/>
+          <div class="pcard-id">
+            <div class="pcard-name">${escHtml(p.name)}</div>
+            <div class="pcard-dev">${escHtml(p.developer || "—")}</div>
+          </div>
+          <div class="pcard-badge tone-${tone}-bg">
+            <span class="sc">${p.score ?? "—"}</span>
+            <span class="gr">${p.grade || ""}</span>
+          </div>
+        </div>
+        <div class="pcard-mid">
+          <span class="tagchip genre">${escHtml(p.genre)}</span>
+          ${p.platform ? `<span class="tagchip">${p.platform === "ios" ? "iOS" : "Android"}</span>` : ""}
+          <span class="tagchip" style="background:${hexA(q.color,.12)};color:${q.color}">${q.label}</span>
+        </div>
+        <div class="pcard-metrics">
+          <div>Доход 30д<b>${money(p.revenue30d)}</b></div>
+          <div>RPD<b>${money(p.rpd)}</b></div>
+          <div>Органика<b>${p.organic != null ? p.organic + "%" : "—"}</b></div>
+        </div>
+        <div class="pcard-foot">
+          <select class="qual-select">
+            ${QUALS.map(qq => `<option value="${qq.id}" ${((p.qualification||"new")===qq.id)?"selected":""}>${qq.label}</option>`).join("")}
+          </select>
+          <span class="pcard-dev">${relTime(p.createdAt)}</span>
+        </div>
+      </div>`;
+  }
+
+  /* ============================================================
+     МОДАЛКА ПРОЕКТА — просмотр / правка / удаление
+     ============================================================ */
+  function bindModal() {
+    $("#modalClose").addEventListener("click", closeModal);
+    $("#modal").addEventListener("click", e => { if (e.target.id === "modal") closeModal(); });
+    document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
+  }
+  function closeModal() { $("#modal").hidden = true; }
+
+  function openModal(id) {
+    const p = PROJECTS.find(x => x.id === id);
+    if (!p) return;
+    $("#modalBody").innerHTML = modalViewHTML(p);
+    $("#modal").hidden = false;
+    wireModal(p);
+  }
+
+  function modalViewHTML(p) {
+    const r = Rating.compute(p);
+    const tone = r.grade.tone;
+    const q = qualById(p.qualification || "new");
+    const parts = r.parts.map(pt => `
+      <div class="part">
+        <div class="part-top"><span>${pt.label} <span style="color:var(--muted-2)">${pt.hint ? "· " + escHtml(pt.hint) : ""}</span></span><b>${Math.round(pt.value)}</b></div>
+        <div class="bar"><span class="tone-${toneOf(pt.value)}-bg" style="width:${pt.value}%"></span></div>
+      </div>`).join("");
+    const creatives = (p.creatives && p.creatives.length)
+      ? p.creatives.map(c => `<div class="m-creative"><a href="${escAttr(c.url)}" target="_blank" rel="noopener">${escHtml(c.url || "креатив")}</a><span class="aud">${escHtml(c.audience || "—")}</span></div>`).join("")
+      : `<div class="creative-empty">Креативы не добавлены.</div>`;
+    return `
+      <div class="m-head">
+        <img class="m-icon" src="${escAttr(p.icon)}" alt="" onerror="this.style.visibility='hidden'"/>
+        <div>
+          <div class="m-title">${escHtml(p.name)}</div>
+          <div class="m-sub">${escHtml(p.developer || "—")}${p.developerEmail ? " · " + escHtml(p.developerEmail) : ""}</div>
+          <div class="m-sub">${p.storeUrl ? `<a href="${escAttr(p.storeUrl)}" target="_blank" rel="noopener" style="color:var(--brand-ink)">открыть в сторе</a>` : ""}</div>
+        </div>
+        <div class="m-badge tone-${tone}-bg">
+          <div class="s">${r.score}</div><div class="v">${r.grade.verdict}</div>
+        </div>
+      </div>
+      <div class="m-body">
+        <div class="m-section">
+          <h3>Из стора</h3>
+          <div class="m-fields three">
+            ${kv("Платформа", p.platform === "ios" ? "App Store" : p.platform === "android" ? "Google Play" : "—")}
+            ${kv("Релиз", p.releaseDate || "—")}
+            ${kv("Последний апдейт", p.lastUpdate || "—")}
+          </div>
+        </div>
+
+        <div class="m-section">
+          <h3>Показатели</h3>
+          <div class="m-fields three">
+            ${kv("Жанр / ниша", p.genre)}
+            ${kv("RPD", money(p.rpd))}
+            ${kv("Доход 30д", money(p.revenue30d))}
+            ${kv("Инсталлы 30д", p.installs != null ? Number(p.installs).toLocaleString("ru-RU") : "—")}
+            ${kv("Органика", p.organic != null ? p.organic + "%" : "—")}
+            ${kv("Ниша", `${r.niche.text} · ${r.niche.score}`)}
+          </div>
+        </div>
+
+        <div class="m-section m-parts">
+          <h3>Как посчитан рейтинг</h3>
+          ${parts}
+        </div>
+
+        <div class="m-section">
+          <h3>Креативы и собранная аудитория</h3>
+          <div class="m-creatives">${creatives}</div>
+        </div>
+
+        <div class="m-section">
+          <h3>Квалификация и заметки</h3>
+          <div class="m-fields">
+            <label>Статус
+              <select id="mQual">${QUALS.map(qq => `<option value="${qq.id}" ${((p.qualification||"new")===qq.id)?"selected":""}>${qq.label}</option>`).join("")}</select>
+            </label>
+            <div class="kv"><div class="k">Добавлен</div><div class="v">${fullTime(p.createdAt)}</div></div>
+          </div>
+          <textarea class="m-note" id="mNote" placeholder="Заметки: договорённости, контакты, условия…">${escHtml(p.note || "")}</textarea>
+        </div>
+
+        <div class="m-actions">
+          <button class="btn btn-primary" id="mSave">Сохранить изменения</button>
+          <button class="btn btn-ghost" id="mEdit">Редактировать показатели</button>
+          <button class="btn btn-danger" id="mDelete" style="margin-left:auto">Удалить из базы</button>
+        </div>
+      </div>`;
+  }
+
+  function wireModal(p) {
+    $("#mSave").addEventListener("click", async () => {
+      await DB.update(p.id, {
+        qualification: $("#mQual").value,
+        note: $("#mNote").value
+      });
+      closeModal();
+    });
+    $("#mDelete").addEventListener("click", async () => {
+      if (confirm(`Удалить «${p.name}» из базы?`)) { await DB.remove(p.id); closeModal(); }
+    });
+    $("#mEdit").addEventListener("click", () => openEdit(p));
+  }
+
+  function openEdit(p) {
+    $("#modalBody").innerHTML = `
+      <div class="m-head"><div><div class="m-title">Редактирование</div><div class="m-sub">${escHtml(p.name)}</div></div></div>
+      <div class="m-body">
+        <div class="m-section">
+          <div class="edit-grid">
+            <label>Название<input id="eName" value="${escAttr(p.name)}"/></label>
+            <label>Разработчик<input id="eDev" value="${escAttr(p.developer||"")}"/></label>
+            <label>E-mail<input id="eEmail" value="${escAttr(p.developerEmail||"")}"/></label>
+            <label>Жанр / ниша<select id="eGenre">${GENRES.map(g=>`<option ${g===p.genre?"selected":""}>${g}</option>`).join("")}</select></label>
+            <label>RPD, $<input id="eRpd" type="number" value="${p.rpd??""}"/></label>
+            <label>Доход 30д, $<input id="eRev" type="number" value="${p.revenue30d??""}"/></label>
+            <label>Инсталлы 30д<input id="eInst" type="number" value="${p.installs??""}"/></label>
+            <label>Органика, %<input id="eOrg" type="number" value="${p.organic??""}"/></label>
+            <label>Дата релиза<input id="eRel" value="${escAttr(p.releaseDate||"")}"/></label>
+            <label>Последний апдейт<input id="eUpd" value="${escAttr(p.lastUpdate||"")}"/></label>
+          </div>
+        </div>
+        <div class="m-actions">
+          <button class="btn btn-primary" id="eSave">Сохранить и пересчитать</button>
+          <button class="btn btn-ghost" id="eBack">Назад</button>
+        </div>
+      </div>`;
+    $("#eBack").addEventListener("click", () => openModal(p.id));
+    $("#eSave").addEventListener("click", async () => {
+      const patch = {
+        name: $("#eName").value.trim(),
+        developer: $("#eDev").value.trim(),
+        developerEmail: $("#eEmail").value.trim(),
+        genre: $("#eGenre").value,
+        rpd: numOrNull($("#eRpd").value),
+        revenue30d: numOrNull($("#eRev").value),
+        installs: numOrNull($("#eInst").value),
+        organic: numOrNull($("#eOrg").value),
+        releaseDate: $("#eRel").value.trim(),
+        lastUpdate: $("#eUpd").value.trim()
+      };
+      const r = Rating.compute({ ...p, ...patch });
+      patch.score = r.score; patch.grade = r.grade.letter;
+      await DB.update(p.id, patch);
+      const updated = { ...p, ...patch };
+      $("#modalBody").innerHTML = modalViewHTML(updated);
+      wireModal(updated);
+    });
+  }
+
+  /* ============================================================
+     ВКЛАДКА 3 — АНАЛИТИКА
+     ============================================================ */
+  function renderAnalytics() {
+    if (!$("#view-analytics").classList.contains("active") && PROJECTS.length === 0 && !charts.niche) {
+      // всё равно нарисуем рынок при первом заходе
+    }
+    renderKPIs();
+    drawNicheChart();
+    drawGenreChart();
+    drawGradeChart();
+    drawQualChart();
+    drawTopList();
+  }
+
+  function renderKPIs() {
+    const n = PROJECTS.length;
+    const avg = n ? Math.round(PROJECTS.reduce((s,p)=>s+(p.score||0),0)/n) : 0;
+    const pipe = PROJECTS.reduce((s,p)=>s+(p.revenue30d||0),0);
+    const interested = PROJECTS.filter(p => ["interested","negotiation","reply","contacted"].includes(p.qualification)).length;
+    $("#kpiRow").innerHTML = [
+      ["Проектов в базе", n],
+      ["Средний рейтинг", avg || "—"],
+      ["Доход пайплайна / мес", "$" + money(pipe).replace("$","")],
+      ["В работе", interested]
+    ].map(([l,v]) => `<div class="kpi"><div class="k-val">${v}</div><div class="k-label">${l}</div></div>`).join("");
+  }
+
+  function baseChartOpts(extra={}) {
+    return Object.assign({
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { grid: { display: false } }, y: { grid: { color: "#EEF1F5" }, beginAtZero: true } }
+    }, extra);
+  }
+  function fresh(id) { if (charts[id]) charts[id].destroy(); return $("#"+id).getContext("2d"); }
+
+  function drawNicheChart() {
+    const rows = GENRES.map(g => ({ g, ...window.NICHE_BENCHMARKS[g] }))
+                       .sort((a,b) => b.growth - a.growth);
+    charts.niche = new Chart(fresh("chartNiche"), {
+      type: "bar",
+      data: {
+        labels: rows.map(r => r.g),
+        datasets: [
+          { label: "Рост", data: rows.map(r => r.growth), backgroundColor: "#4C5BD4", borderRadius: 4, barPercentage: .9 },
+          { label: "Доход (индекс)", data: rows.map(r => r.revenueIndex), backgroundColor: "#34C08A", borderRadius: 4, barPercentage: .9 }
+        ]
+      },
+      options: baseChartOpts({
+        plugins: { legend: { display: true, position: "top", labels: { boxWidth: 12, font: { size: 11 } } } },
+        scales: { x: { grid: { display:false }, ticks: { font:{ size:10 }, maxRotation: 60, minRotation: 40 } }, y: { grid:{ color:"#EEF1F5" }, max:100 } }
+      })
+    });
+  }
+
+  function drawGenreChart() {
+    const counts = {};
+    PROJECTS.forEach(p => counts[p.genre] = (counts[p.genre]||0)+1);
+    const labels = Object.keys(counts);
+    charts.genre = new Chart(fresh("chartByGenre"), {
+      type: "bar",
+      data: { labels, datasets: [{ data: labels.map(l=>counts[l]), backgroundColor: "#4C5BD4", borderRadius: 4 }] },
+      options: baseChartOpts({ scales: { x:{ grid:{display:false}, ticks:{ font:{size:10}, maxRotation:60, minRotation:40 } }, y:{ grid:{color:"#EEF1F5"}, ticks:{ precision:0 } } } })
+    });
+  }
+
+  function drawGradeChart() {
+    const order = ["A","B","C","D","E"];
+    const col = { A:"#0E7A57", B:"#34C08A", C:"#B47908", D:"#E08A3B", E:"#C1443B" };
+    const counts = Object.fromEntries(order.map(g=>[g,0]));
+    PROJECTS.forEach(p => { if (counts[p.grade]!=null) counts[p.grade]++; });
+    charts.grade = new Chart(fresh("chartByGrade"), {
+      type: "doughnut",
+      data: { labels: order, datasets: [{ data: order.map(g=>counts[g]), backgroundColor: order.map(g=>col[g]), borderWidth: 2, borderColor: "#fff" }] },
+      options: { responsive: true, maintainAspectRatio: false, cutout: "62%", plugins: { legend: { position: "right", labels: { boxWidth: 12, font: { size: 11 } } } } }
+    });
+  }
+
+  function drawQualChart() {
+    const counts = Object.fromEntries(QUALS.map(q=>[q.id,0]));
+    PROJECTS.forEach(p => { const k=p.qualification||"new"; counts[k]=(counts[k]||0)+1; });
+    charts.qual = new Chart(fresh("chartByQual"), {
+      type: "bar",
+      data: { labels: QUALS.map(q=>q.label), datasets: [{ data: QUALS.map(q=>counts[q.id]), backgroundColor: QUALS.map(q=>q.color), borderRadius: 4 }] },
+      options: baseChartOpts({ indexAxis: "y", scales: { x:{ grid:{color:"#EEF1F5"}, ticks:{precision:0} }, y:{ grid:{display:false}, ticks:{ font:{size:11} } } } })
+    });
+  }
+
+  function drawTopList() {
+    const list = [...PROJECTS].sort((a,b)=>(b.score||0)-(a.score||0)).slice(0,6);
+    const el = $("#topList");
+    if (!list.length) { el.innerHTML = `<div class="creative-empty" style="padding:14px">Добавьте проекты — топ появится здесь.</div>`; return; }
+    el.innerHTML = list.map((p,i) => {
+      const tone = gradeTone(p.score);
+      const b = window.NICHE_BENCHMARKS[p.genre] || {};
+      return `<div class="top-row" data-id="${p.id}">
+        <span class="top-rank">${i+1}</span>
+        <img class="top-icon" src="${escAttr(p.icon)}" onerror="this.style.visibility='hidden'"/>
+        <div class="top-name">${escHtml(p.name)}<div class="top-sub">${escHtml(p.genre)} · рост ниши ${b.growth ?? "—"}</div></div>
+        <span class="top-score tone-${tone}">${p.score ?? "—"}</span>
+      </div>`;
+    }).join("");
+    $$("#topList .top-row").forEach(r => r.addEventListener("click", () => openModal(r.dataset.id)));
+  }
+
+  /* ---------------- утилиты ---------------- */
+  function gradeTone(score) {
+    if (score == null) return "watch";
+    if (score >= 65) return "go";
+    if (score >= 50) return "watch";
+    return "pass";
+  }
+  function money(v) {
+    if (v == null || v === "" || isNaN(v)) return "—";
+    const n = Number(v);
+    if (n >= 1000000) return "$" + (n/1000000).toFixed(1) + "M";
+    if (n >= 1000) return "$" + (n/1000).toFixed(1) + "K";
+    return "$" + n.toLocaleString("ru-RU");
+  }
+  function numOrNull(v) { if (v === "" || v == null) return null; const n = Number(v); return Number.isFinite(n) ? n : null; }
+  function kv(k, v) { return `<div class="kv"><div class="k">${k}</div><div class="v">${escHtml(String(v))}</div></div>`; }
+  function relTime(ts) {
+    if (!ts) return "";
+    const d = Date.now() - ts, m = Math.floor(d/60000);
+    if (m < 1) return "только что";
+    if (m < 60) return m + " мин назад";
+    const h = Math.floor(m/60); if (h < 24) return h + " ч назад";
+    return Math.floor(h/24) + " дн назад";
+  }
+  function fullTime(ts) { return ts ? new Date(ts).toLocaleString("ru-RU") : "—"; }
+  function escHtml(s) { return String(s ?? "").replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c])); }
+  function escAttr(s) { return escHtml(s).replace(/'/g, "&#39;"); }
+  function hexA(hex, a) {
+    const m = hex.replace("#","").match(/.{2}/g); if (!m) return hex;
+    const [r,g,b] = m.map(x=>parseInt(x,16));
+    return `rgba(${r},${g},${b},${a})`;
+  }
+
+  document.addEventListener("DOMContentLoaded", boot);
+})();
+
+
+</script>
 </body>
 </html>
